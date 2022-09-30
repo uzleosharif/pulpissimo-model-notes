@@ -1,0 +1,46 @@
+
+
+
+
+\documentclass{article}
+
+
+\usepackage{enumitem, amssymb}
+\newlist{todolist}{itemize}{2}
+\setlist[todolist]{label=$\square$}
+
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\done}{\rlap{$\square$}{\raisebox{2pt}{\large\hspace{1pt}\cmark}}%
+\hspace{-2.5pt}}
+\newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
+
+
+\title{Modeling Peripherals of Pulpissimo Chip}
+
+\begin{document}
+
+\maketitle
+
+\section{Goal}
+The goal of this work is to model the peripherals, especially the $\mu$DMA based, of the Pulpissimo Chip.
+The models are developed in SystemC at a fairly high abstraction level. Key thing is to ensure that this
+chip model could be used for quick SW development by other teams. Currently, we see following work items:
+
+\begin{todolist}
+ % \item[\done], \item[wontfix] ...
+ \item Setup TGC-VP simulation on Ubuntu20 (EDA machine)
+ \item Insert bare-bone peripheral on the address of $\mu$DMA and make sure this can be accessed on a dummy register
+ via SW
+ \item SPI-M model using Minres API
+ \item I2S model using Minres API
+ \item create Pulpissimo project in \texttt{VPVibes} space and push modified TGC-VP in this space
+ \item pull request for the peripherals in \texttt{VPVPerph}
+\end{todolist}
+
+\section{Notes on SPI-M model}
+
+\section{Notes on I2S model}
+
+\end{document}
