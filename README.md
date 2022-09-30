@@ -1,0 +1,2 @@
+- this is meant to document the progress of Pulpissimo peripherals
+- further supplementary material in the project that should be backed up will be kept here
