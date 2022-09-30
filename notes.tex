@@ -23,6 +23,7 @@
 
 \maketitle
 
+
 \section{Goal}
 The goal of this work is to model the peripherals, especially the $\mu$DMA based, of the Pulpissimo Chip.
 The models are developed in SystemC at a fairly high abstraction level. Key thing is to ensure that this
@@ -30,17 +31,56 @@ chip model could be used for quick SW development by other teams. Currently, we 
 
 \begin{todolist}
  % \item[\done], \item[wontfix] ...
- \item Setup TGC-VP simulation on Ubuntu20 (EDA machine)
- \item Insert bare-bone peripheral on the address of $\mu$DMA and make sure this can be accessed on a dummy register
+ \item[\done] setup \texttt{TGC-VP} simulation on Ubuntu20 (EDA machine)
+ \item[\done] create Pulpissimo project in \texttt{VP-Vibes} space and push modified \texttt{TGC-VP} in this space.
+ \item remove TGC-VP specific components
+ \item adapt bare-metal SW compilation flow as per Pulpissimo's RISC-V architecture
+ \item[\done] insert bare-bone peripheral on the address of $\mu$DMA and make sure this can be accessed on a dummy register
  via SW
  \item SPI-M model using Minres API
  \item I2S model using Minres API
- \item create Pulpissimo project in \texttt{VPVibes} space and push modified TGC-VP in this space
- \item pull request for the peripherals in \texttt{VPVPerph}
+ \item pull request for the peripherals in \texttt{VPV-Peripherals}
 \end{todolist}
+
+\section{Progress}
+\begin{itemize}
+ \item forked \texttt{TGC-VP} from Minres \texttt{TGC-VP:develop} to create a new \texttt{Pulpissimo-VP} project in
+       \texttt{VP-Vibes} space
+ \item made small changes to the \texttt{README} file to be compatible with new project space
+ \item inserted a dummy-peripheral and accessed it in SW
+
+\end{itemize}
+
+
+\section{Useful Repositories}
+\begin{itemize}
+ \item \texttt{VP-Vibes} Project
+ \item \texttt{SystemC-Components} is a SystemC library used to quickly build VPs
+ \item \texttt{VPV-Peripherals} is a dedicated repo to hold peripherals that are built using VP-Vibes concept
+ \item \texttt{TGC-VP} Scale4Ege ecosystem VP
+ \item EKUT project repo that has a test program for I2S peripheral that runs on Pulpissimo Chip
+\end{itemize}
+
+\section{Setting up TGC-VP simulation}
+\begin{itemize}
+ \item Conan has to be upgraded to $>$= 1.51.3
+\end{itemize}
 
 \section{Notes on SPI-M model}
 
 \section{Notes on I2S model}
+
+\section{Issues}
+\begin{itemize}
+ \item \texttt{dbt-rise-core} latest commits are not compilable (gcc 9.4). Stick to old commit 44acf8a. This is also
+       now noted down in READ file as well.
+\end{itemize}
+
+\section{SW development for Pulpissimo-VP}
+\subsection{Bare-metal}
+using TGC-VP compilation flow. This is a \textit{Makefile} based system that requires \texttt{riscv32-unknown-elf}
+command to be available on terminal
+
+\subsection{PULP SDK}
 
 \end{document}
