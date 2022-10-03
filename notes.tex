@@ -34,12 +34,12 @@ chip model could be used for quick SW development by other teams. Currently, we 
  \item[\done] setup \texttt{TGC-VP} simulation on Ubuntu20 (EDA machine)
  \item[\done] create Pulpissimo project in \texttt{VP-Vibes} space and push modified \texttt{TGC-VP} in this space.
  \item remove TGC-VP specific components
- \item adapt bare-metal SW compilation flow as per Pulpissimo's RISC-V architecture
- \item[\done] insert bare-bone peripheral on the address of $\mu$DMA and make sure this can be accessed on a dummy register
- via SW
+ \item[\done] adapt bare-metal SW compilation flow as per Pulpissimo's RISC-V architecture
+ \item[\done] insert bare-bone peripheral on the address of $\mu$DMA and make sure this can be accessed on a
+ dummy register via SW
  \item SPI-M model using Minres API
  \item I2S model using Minres API
- \item pull request for the peripherals in \texttt{VPV-Peripherals}
+ \item[\done] pull request for the peripherals in \texttt{VPV-Peripherals}
 \end{todolist}
 
 \section{Progress}
@@ -48,22 +48,9 @@ chip model could be used for quick SW development by other teams. Currently, we 
        \texttt{VP-Vibes} space
  \item made small changes to the \texttt{README} file to be compatible with new project space
  \item inserted a dummy-peripheral and accessed it in SW
-
-\end{itemize}
-
-
-\section{Useful Repositories}
-\begin{itemize}
- \item \texttt{VP-Vibes} Project
- \item \texttt{SystemC-Components} is a SystemC library used to quickly build VPs
- \item \texttt{VPV-Peripherals} is a dedicated repo to hold peripherals that are built using VP-Vibes concept
- \item \texttt{TGC-VP} Scale4Ege ecosystem VP
- \item EKUT project repo that has a test program for I2S peripheral that runs on Pulpissimo Chip
-\end{itemize}
-
-\section{Setting up TGC-VP simulation}
-\begin{itemize}
- \item Conan has to be upgraded to $>$= 1.51.3
+ \item bare-bone UDMA peripheral (with in \texttt{VPVPer}) integration in TGC-VP now working.
+ \item github project organization: \texttt{Pulpissimo-VP} project in \texttt{VP-Vibes} space but this uses
+       submodule \texttt{VPVPer} in \texttt{uzleosharif} space as I only have write access to my repos
 \end{itemize}
 
 \section{Notes on SPI-M model}
@@ -72,15 +59,29 @@ chip model could be used for quick SW development by other teams. Currently, we 
 
 \section{Issues}
 \begin{itemize}
- \item \texttt{dbt-rise-core} latest commits are not compilable (gcc 9.4). Stick to old commit 44acf8a. This is also
-       now noted down in READ file as well.
+ \item Conan has to be upgraded to $>$= 1.51.3 for compiling \texttt{TGC-VP / Pulpissimo-VP}.
+ \item \texttt{dbt-rise-core} latest commits are not compilable (gcc 9.4). Stick to old commit \textbf{0x44acf8a}.
+       This is also now noted down in READ file as well.
+ \item some bugs in generated regs map for UDMA peripherals (\texttt{VPVPer} project):
+       (i) some wrong base-addresses (ii) some wrong offset calculations
 \end{itemize}
 
 \section{SW development for Pulpissimo-VP}
 \subsection{Bare-metal}
-using TGC-VP compilation flow. This is a \textit{Makefile} based system that requires \texttt{riscv32-unknown-elf}
-command to be available on terminal
+The Pulpissimo VP simulates RISCY core (\texttt{RV32IMC/F}). For SW development, we use
+TGC-VP compilation flow. This is a \textit{Makefile} based system that requires \texttt{riscv32-unknown-elf}
+command to be available on terminal.
 
 \subsection{PULP SDK}
+
+\newpage
+\section{Useful Repositories}
+\begin{itemize}
+ \item \texttt{VP-Vibes} Project
+ \item \texttt{SystemC-Components} is a SystemC library used to quickly build VPs
+ \item \texttt{VPV-Peripherals} is a dedicated repo to hold peripherals that are built using VP-Vibes concept
+ \item \texttt{TGC-VP} Scale4Ege ecosystem VP
+ \item EKUT project repo that has a test program for I2S peripheral that runs on Pulpissimo Chip
+\end{itemize}
 
 \end{document}
