@@ -16,8 +16,11 @@
 \hspace{-2.5pt}}
 \newcommand{\wontfix}{\rlap{$\square$}{\large\hspace{1pt}\xmark}}
 
+\usepackage[hidelinks]{hyperref}
 
 \title{Modeling Peripherals of Pulpissimo Chip}
+\author{uzleo}
+\date{}
 
 \begin{document}
 
@@ -40,6 +43,7 @@ chip model could be used for quick SW development by other teams. Currently, we 
  \item SPI-M model using Minres API
  \item I2S model using Minres API
  \item[\done] pull request for the peripherals in \texttt{VPV-Peripherals}
+ \item[\done] ask Axel for demo binary. What about runtime environment: is it bare-metal or based on PULP SDK?
 \end{todolist}
 
 \section{Progress}
@@ -54,6 +58,46 @@ chip model could be used for quick SW development by other teams. Currently, we 
 \end{itemize}
 
 \section{Notes on SPI-M model}
+\subsection{Tx side}
+
+\subsection{Rx side}
+Involves three registers: \texttt{SPIM\_RX\_SADDR, SPIM\_RX\_SIZE, SPIM\_RX\_CFG}. These are used to configure the RX
+channel of uDMA (between uDMA and SPIM IP) to receive the data from SPIM IP to the system memory.
+
+\noindent \rule[0.5ex]{\linewidth}{1pt}
+
+\noindent \textbf{How data moves from external device to system memory via SPIM interface?}
+
+The SPIM is always the master of SPI communication hence the external device can't initiate the communication. The
+SPIM IP would be the first to request data from external device (the slave in SPI protocol).
+
+So my guess is the
+CPU first programs the uDMA that it needs to receive data from outside via SPI commands. These commands are then
+processed by uDMA which in turn programs the SPIM IP to initiate the Rx request from external device. After
+successful data transfer, the SPIM IP buffers all the received data. \textit{Then uDMA (or SPIM IP)
+ signals (creates event) to the CPU}.
+The CPU can then configure the RX channel (\texttt{SPIM\_RX\_SADDR, SPIM\_RX\_SIZE, SPIM\_RX\_CFG})
+to get the data from SPIM IP to uDMA (via uDMA-SPIM-RX channel) to the system memory.
+
+\noindent \textbf{TODO:} read SPIM (bare-metal/PULP-SDK) example code to make sure above flow is correct.
+
+\noindent \rule[0.5ex]{\linewidth}{1pt}
+
+The \texttt{pulp-rt} driver function \texttt{rt\_spim\_receive()} states that "Due to hardware constraints, the address
+of the buffer must be aligned on 4 bytes and the size must be a multiple of 4"
+
+\subsection{Commands}
+
+\subsection{SW}
+To better understand SPIM functionality we also look at various SW (applications) that are available on the internet.
+So far I found following useful:
+\begin{itemize}
+ \item \texttt{pulp-rt-examples} in \texttt{pulp-platform} esp. the async example. This uses \texttt{pulp-rt}.
+       % \item \texttt{pulp-runtime} in \texttt{pulp-platform} but only drivers.
+ \item  \texttt{pmsis\_tests} in \texttt{GreenWaves-Technologies}
+ \item \texttt{pulp-freertos} in \texttt{pulp-platform} provides spi stuff in tests
+\end{itemize}
+
 
 \section{Notes on I2S model}
 
@@ -81,7 +125,27 @@ command to be available on terminal.
  \item \texttt{SystemC-Components} is a SystemC library used to quickly build VPs
  \item \texttt{VPV-Peripherals} is a dedicated repo to hold peripherals that are built using VP-Vibes concept
  \item \texttt{TGC-VP} Scale4Ege ecosystem VP
- \item EKUT project repo that has a test program for I2S peripheral that runs on Pulpissimo Chip
+ \item \texttt{pulp-runtime} in \texttt{pulp-platform} space which is a simple runtime for Pulp architecture
+ \item \texttt{pulp-runtime-examples} in \texttt{pulp-platform} provides some examples that on how to use
+       \texttt{pulp-runtime} project
+ \item \texttt{pulp-freertos} in \texttt{pulp-platform} space which provides FreeRTOS support and drivers for
+       development of real-time applications on PULP based systems.
+
+        [Paul (Scale4Edge)] it is up-to-date, has most features, and is rather easy to use. Unfortunately, it is
+       missing I2S drivers.
+ \item \texttt{custom-pulp-sdk} in EKUT project space
+
+       gitlab: \url{https://atreus.informatik.uni-tuebingen.de}
+
+       [Paul (Scale4Edge)] our own port ofthe PulpSDK. It is based on an old version, but it is fully functional
+       and contain all drivers.
+
+       It seems to me that Axel Sauer (Bosch) is also developing his binaries using this runtime.
+ \item \texttt{pulp-sdk} in \texttt{pulp-platform} that serves as a pre-cursor to EKUT SDK. However, latest
+       Pulpissimo is incompatible with this SDK and recommendation is to use FreeRTOS port instead.
+ \item \texttt{pulp-rt-examples} in \texttt{pulp-platform} gives some examples on how to use \texttt{pulp-sdk}
+       % \item \texttt{pmsis\_tests} in \texttt{GreenWaves-Technologies} also gives some examples on how to use
+       %       \texttt{pulp-sdk} and is more up-to-date and recommended by \texttt{pulp-sdk} project.
 \end{itemize}
 
 \end{document}
