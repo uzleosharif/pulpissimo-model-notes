@@ -18,6 +18,8 @@
 
 \usepackage[hidelinks]{hyperref}
 
+\usepackage{listings}
+
 \title{Modeling Peripherals of Pulpissimo Chip}
 \author{uzleo}
 \date{}
@@ -36,15 +38,18 @@ chip model could be used for quick SW development by other teams. Currently, we 
  % \item[\done], \item[wontfix] ...
  \item[\done] setup \texttt{TGC-VP} simulation on Ubuntu20 (EDA machine)
  \item[\done] create Pulpissimo project in \texttt{VP-Vibes} space and push modified \texttt{TGC-VP} in this space.
- \item remove TGC-VP specific components
+ \item[\done] remove TGC-VP specific components --- Adapt memory, interrupt-controller to Pulpissimo SoC
  \item[\done] adapt bare-metal SW compilation flow as per Pulpissimo's RISC-V architecture
  \item[\done] insert bare-bone peripheral on the address of $\mu$DMA and make sure this can be accessed on a
  dummy register via SW
- \item SPI-M model using Minres API
+ \item Pulpissimo SoC using Minres API
+ \item SPIM model using Minres API
  \item I2S model using Minres API
  \item[\done] pull request for the peripherals in \texttt{VPV-Peripherals}
  \item[\done] ask Axel for demo binary. What about runtime environment: is it bare-metal or based on PULP SDK?
  \item how to notify from peripheral to CPU that an event occurred in Minres VPs? Maybe ask Eyck
+ \item change DBT core to RISCY core that is used in Pulpissimo SoC. Possibly with Eyck help
+ \item Compile \texttt{custom-pulp-sdk} and make sure that empty main() proram is running on Pulpissimo VP
 \end{todolist}
 
 \section{Progress}
@@ -58,7 +63,12 @@ chip model could be used for quick SW development by other teams. Currently, we 
        submodule \texttt{VPVPer} in \texttt{uzleosharif} space as I only have write access to my repos
 \end{itemize}
 
-\section{Notes on SPI-M model}
+\section{Notes on Pulpissimo SoC model}
+\begin{itemize}
+ \item for timer model, have a look at \texttt{sifive::clint} peripheral in \texttt{TGC-VP}
+\end{itemize}
+
+\section{Notes on SPIM model}
 \subsection{Tx side}
 
 \subsection{Rx side}
@@ -79,9 +89,90 @@ successful data transfer, the SPIM IP buffers all the received data. \textit{The
  signals (creates event) to the CPU}.
 The CPU can then configure the RX channel (\texttt{SPIM\_RX\_SADDR, SPIM\_RX\_SIZE, SPIM\_RX\_CFG})
 to get the data from SPIM IP to uDMA (via uDMA-SPIM-RX channel) to the system memory.
+\\\\
+Looking at older PulpSDK version, we see that CPU initiates the transfer using
+%
+\begin{lstlisting}[language=C]
+rt_spim_receive(
+  spim, rx_buffer, BUFFER_SIZE * 8, RT_SPIM_CS_AUTO, NULL
+);
 
-\noindent \textbf{TODO:} read SPIM (bare-metal/PULP-SDK) example code to make sure above flow is correct.
+/** \brief Enqueue a read copy to the SPI
+ * (from SPI to Chip device).
+ *
+ * This function can be used to receive data from the
+ * SPI device. The copy will make an asynchronous transfer
+ * between the SPI and one of the chip memory. An event
+ * can be specified in order to be notified when the
+ * transfer is finished. This is using classic SPI
+ * transfer with MOSI and MISO lines.
+ * Due to hardware constraints, the address of the buffer
+ * must be aligned on 4 bytes and the size must be a
+ * multiple of 4.
+ *
+ * handle: The handle of the SPI device which was returned
+ * when the device was opened.
+ * data: The address in the chip where the received data
+ * must be written.
+ * len: The size in bits of the copy.
+ * cs_mode: The mode for managing the chip select.
+ * event: The event used to notify the end of transfer.
+ * See the documentation of rt_event_t for more details.
+ */
+// static inline void rt_spim_receive(
+//  rt_spim_t *handle, void *data, size_t len,
+//  rt_spim_cs_e cs_mode, rt_event_t *event
+//  );
+\end{lstlisting}
+%
+which internally creates the uDMA commands to configure the SPIM-CMD and SPI-RX channels as following
+%
+\begin{lstlisting}[language=C]
+int cfg = UDMA_CHANNEL_CFG_SIZE_8 | UDMA_CHANNEL_CFG_EN;
+plp_udma_enqueue(channel_base, (int)data, buffer_size, cfg);
+plp_udma_enqueue(cmd_base, (int)cmd, 4 * 4, cfg);
 
+/** Enqueue a new transfer to a UDMA channel.
+ *
+  channelOffset: Offset of the channel
+  l2Addr: Address in L2 memory where the data must be
+  accessed (either stored or loaded)
+  size: Size in bytes of the transfer
+  cfg: Configuration of the transfer. Can be
+  UDMA_CHANNEL_CFG_SIZE_8, UDMA_CHANNEL_CFG_SIZE_16 or
+  UDMA_CHANNEL_CFG_SIZE_32
+  */
+// static inline void plp_udma_enqueue(
+//   unsigned channelOffset, unsigned int l2Addr,
+//   unsigned int size, unsigned int cfg
+// ) {
+//  pulp_write32(channelBase + UDMA_CHANNEL_SADDR_OFFSET,
+//    l2Addr);
+//  pulp_write32(channelBase + UDMA_CHANNEL_SIZE_OFFSET,
+//    size);
+//  pulp_write32(channelBase + UDMA_CHANNEL_CFG_OFFSET,
+//    cfg | UDMA_CHANNEL_CFG_EN);
+// }
+
+\end{lstlisting}
+%
+Looking at these code snippets, it seems the the following happens for data transfer between external SPI device
+to Pulpissimo system memory (L2) via SPI protocol
+\begin{itemize}
+ \item CPU configures the Rx channel of SPIM peripheral in uDMA and sends the Rx-buffer pointer
+ \item CPU configures the CMD channel of SPIM peripheral in uDMA and sends some commands to prepare for Rx operation
+ \item uDMA initiates the Rx transfer with external SPI device and autonomously fills the data in Rx-buffer (L2 mem)
+ \item uDMA then triggers the event to CPU notifying it about the end of requested transfer
+\end{itemize}
+In this driver, following commnads were sent to uDMA from CPU via the command buffer (unsigned int cmd[4];)
+\begin{enumerate}
+ \item \texttt{SPI\_CMD\_CFG (0x0)} : clock for SPI communication
+ \item \texttt{SPI\_CMD\_SOT (0x1)} : set chip select (slave)
+ \item \texttt{SPI\_CMD\_RX\_DATA (0x7)} : how much data to receive, what is word size, how many words per transfer,
+       lsb first?, qspi? etc.
+ \item \texttt{SPI\_CMD\_EOT (0x9)} : clear chip select (slave)
+\end{enumerate}
+%
 \noindent \rule[0.5ex]{\linewidth}{1pt}
 
 The \texttt{pulp-rt} driver function \texttt{rt\_spim\_receive()} states that "Due to hardware constraints, the address
