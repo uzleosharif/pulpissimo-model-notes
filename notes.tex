@@ -43,22 +43,23 @@ chip model could be used for quick SW development by other teams. Currently, we 
  \item[\done] insert bare-bone peripheral on the address of $\mu$DMA and make sure this can be accessed on a
  dummy register via SW
  \item[\done] Pulpissimo SoC using Minres API
- \item SPIM model using Minres API
- \item I2S model using Minres API
  \item[\done] pull request for the peripherals in \texttt{VPV-Peripherals}
  \item[\done] ask Axel for demo binary. What about runtime environment: is it bare-metal or based on PULP SDK?
- \item how to notify from peripheral to CPU that an event occurred in Minres VPs? Maybe ask Eyck
- \item change DBT core to RISCY core that is used in Pulpissimo SoC. Possibly with Eyck help
  \item[\done] Compile \texttt{custom-pulp-sdk}
- \item make sure that empty main() proram is running on Pulpissimo VP
+ \item[\done] make sure that empty main() proram is running on Pulpissimo VP
  \item[\done] SoC-Control needed for bootstrapping
  \item[\done] how to set reset values on Minres peripherals?
  \item[\done] it seems that `custom-pulp-sdk` is out-dated with latest Pulpissimo RTL and the peripheral mmap is not
  matching with latest datasheet spec. Clear this up with Paul what is the peripheral mmap they are using in their RTL
  so I can be compatible to that model.
- \item RDL flow for pulpissimo peripherals .. dont modify generated files rather modify the RDL templates
  \item[\done] SDK bug as we always get the interrupt vector table base to be address \texttt{0x0} instead of possibly
  address in L2 (\texttt{0x1c00\_8000}). Notify Paul
+
+ \item how to notify from peripheral to CPU that an event occurred in Minres VPs? Maybe ask Eyck
+ \item change DBT core to RISCY core that is used in Pulpissimo SoC. Possibly with Eyck help
+ \item RDL flow for pulpissimo peripherals .. dont modify generated files rather modify the RDL templates
+ \item SPIM model using Minres API
+ \item I2S model using Minres API
 \end{todolist}
 
 \section{Progress}
