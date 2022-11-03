@@ -61,6 +61,8 @@ chip model could be used for quick SW development by other teams. Currently, we 
  \item SPIM model using Minres API
  \item I2S model using Minres API
  \item towards mature uDMA by running latest runtime (freeRTOS based) projects of Pulpissimo
+ \item Discuss with Eyck regarding the workaround done in core-complex so as to allow breaking the wait-until loop
+ \item Discuss with Paul regarding the workaround done in custom-pulp-sdk so as to allow breaking the rt-event-execute loop
 \end{todolist}
 
 \section{Progress}
@@ -215,6 +217,8 @@ So far I found following useful:
  \item some bugs in generated regs map for UDMA peripherals (\texttt{VPVPer} project):
        (i) some wrong base-addresses (ii) some wrong offset calculations
  \item The pulpssimo mmap \texttt{0x1A10\_9000} seems to be mirror mapped to \texttt{0x1A10\_9800} as well
+ \item Currently doing a workaround to make interrupts work. For this we break always in \texttt{wait\_until()}
+       routine in core-complex class. 
 \end{itemize}
 
 \section{SW development for Pulpissimo-VP}
